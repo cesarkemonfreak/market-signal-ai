@@ -44,16 +44,23 @@ for h in headlines:
     result = sentiment_pipeline(h)[0]
     sentiment_scores.append((h, result['label'], result['score']))
 
-for text, label, score in sentiment_scores:
-    st.markdown(f"**{text}**")
-    st.caption(f"Sentiment: {label} ({round(score * 100, 1)}%)")
+if sentiment_scores:
+    for text, label, score in sentiment_scores:
+        st.markdown(f"**{text}**")
+        st.caption(f"Sentiment: {label} ({round(score * 100, 1)}%)")
+else:
+    st.warning("No news headlines found or failed to analyze sentiment.")
 
 # --- DAILY SIGNAL LOGIC --- #
 st.subheader("🚦 Daily Signal")
 
 target = stock_input.upper() if stock_input else selected_index
 index_move = price_change.get(target, price_change["default"])
-sentiment_value = sum([s[2] if s[1] == 'POSITIVE' else -s[2] for s in sentiment_scores]) / len(sentiment_scores)
+
+if sentiment_scores:
+    sentiment_value = sum([s[2] if s[1] == 'POSITIVE' else -s[2] for s in sentiment_scores]) / len(sentiment_scores)
+else:
+    sentiment_value = 0
 
 signal = "Hold"
 if index_move > 0.5 and sentiment_value > 0.2:
@@ -77,4 +84,4 @@ else:
 
 # --- FOOTER --- #
 st.markdown("---")
-st.caption("Built with ❤️ by your AI assistant. Daily update using Reuters + HuggingFace.")
+st.caption("Built with ❤️ using Reuters + HuggingFace Transformers.")
