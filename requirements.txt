@@ -1,0 +1,6 @@
+transformers
+streamlit
+requests
+pandas
+beautifulsoup4
+torch
