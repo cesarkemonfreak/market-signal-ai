@@ -70,6 +70,45 @@ elif index_move < -0.5 and sentiment_value < -0.2:
 
 st.metric(label=f"Recommendation for {target}", value=signal)
 
+# --- HISTORICAL PRICE CHART --- #
+st.subheader("📈 30-Day Price History")
+
+ALPHA_VANTAGE_KEY = "UKVLN4FSL7BVL86F"
+
+@st.cache_data(ttl=3600)
+def fetch_price_history(symbol):
+    url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={symbol}&outputsize=compact&apikey={ALPHA_VANTAGE_KEY}"
+    r = requests.get(url)
+    data = r.json()
+    if "Time Series (Daily)" not in data:
+        return pd.DataFrame()
+    
+    ts = data["Time Series (Daily)"]
+    df = pd.DataFrame([
+        {"Date": pd.to_datetime(date), "Close": float(vals["4. close"])}
+        for date, vals in ts.items()
+    ])
+    df.sort_values("Date", inplace=True)
+    return df.tail(30)
+
+# Determine symbol (index ETF or stock)
+symbol_map = {
+    "S&P 500": "SPY",
+    "Nasdaq": "QQQ",
+    "Dow Jones": "DIA",
+    "Nikkei": "EWJ",
+    "Hang Seng": "EWH",
+    "Shanghai": "MCHI"
+}
+
+symbol = stock_input.upper() if stock_input else symbol_map.get(selected_index, "SPY")
+price_df = fetch_price_history(symbol)
+
+if not price_df.empty:
+    st.line_chart(price_df.set_index("Date")["Close"])
+else:
+    st.warning("Price history unavailable for this symbol.")
+
 # --- EXPLANATION --- #
 st.subheader("🧠 Explanation")
 st.markdown(f"Price movement: **{index_move}%**")
