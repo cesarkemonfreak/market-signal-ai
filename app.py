@@ -90,9 +90,44 @@ guru_sources = {
     "Cathie Wood (ARK Invest)": "https://ark-invest.com/news/",
     "Howard Marks (Oaktree Memos)": "https://www.oaktreecapital.com/insights/memo"
 }
-
 for name, url in guru_sources.items():
     st.markdown(f"🔗 [{name}]({url})")
+
+# --- TRUMP TWEET IMPACT --- #
+st.subheader("🦅 Trump Tweet Impact")
+
+fake_tweet = st.text_area("📢 Enter or simulate a recent Trump post:",
+                          value="BIDEN KILLED ENERGY INDEPENDENCE. OIL SHOULD BE $30!!!")
+
+trump_result = sentiment_pipeline(fake_tweet)[0]
+label = trump_result['label']
+score = trump_result['score']
+
+keywords = fake_tweet.lower()
+action = "Hold"
+suggested_asset = ""
+
+if "oil" in keywords or "energy" in keywords:
+    suggested_asset = "USO (Oil ETF)"
+    action = "Sell" if label == "NEGATIVE" else "Buy"
+elif "china" in keywords or "tariff" in keywords:
+    suggested_asset = "SPY (S&P 500)"
+    action = "Sell" if label == "NEGATIVE" else "Buy"
+elif "inflation" in keywords or "gold" in keywords:
+    suggested_asset = "GLD (Gold ETF)"
+    action = "Buy" if label == "NEGATIVE" else "Sell"
+
+if suggested_asset:
+    st.metric(label=f"Trump Tweet Sentiment: {label}", value=f"{round(score * 100, 1)}%")
+    st.metric(label=f"Suggested Action: {suggested_asset}", value=action)
+    if action == "Buy":
+        st.success(f"Trump's post suggests a BUY on {suggested_asset}.")
+    elif action == "Sell":
+        st.error(f"Trump's post suggests a SELL on {suggested_asset}.")
+    else:
+        st.info("Hold — tweet has no strong signal.")
+else:
+    st.warning("Tweet doesn't match known asset signals yet.")
 
 # --- FOOTER --- #
 st.markdown("---")
